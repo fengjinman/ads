@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.springframework.org/schema/beans" xmlns:context="http://www.springframework.org/schema/context" xmlns:aop="http://www.springframework.org/schema/aop" xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.2.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.2.xsd http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.2.xsd ">
+    <!-- 扫描service包下所有使用注解的类型 -->
+    <context:component-scan base-package="com.powerwin.dataSource"/>
+    <!-- 配置数据库相关参数properties的属性：${url} -->
+    <context:property-placeholder location="classpath:jdbc.properties"/>
+    <!-- 数据库连接池 -->
+    <bean id="masterDataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource" destroy-method="close">
+        <property name="driverClass" value="${master_mysql_jdbc_driver}" />
+        <property name="jdbcUrl" value="${master_mysql_jdbc_url}" />
+        <property name="user" value="${master_mysql_jdbc_user}" />
+        <property name="password" value="${master_mysql_jdbc_password}" />
+        <!--idleConnectionTestPeriod：每60秒检查所有连接池中的空闲连接。-->
+        <property name="idleConnectionTestPeriod" value="60"></property>
+        <!--acquireIncrement：链接用完了自动增量3个。 -->
+        <property name="acquireIncrement" value="3"></property>
+        <!--maxPoolSize：连接池中保留的最大连接数。 -->
+        <property name="maxPoolSize" value="50"></property>
+        <!--maxStatements：最大链接数。-->
+        <property name="maxStatements" value="100"></property>
+        <!--numHelperThreads：异步操作，提升性能通过多线程实现多个操作同时被执行。Default: 3-->
+        <property name="numHelperThreads" value="5"></property>
+        <!--initialPoolSize：初始化时获取10个连接，取值应在minPoolSize与maxPoolSize之间。 -->
+        <property name="initialPoolSize" value="10"></property>
+
+    </bean>
+    <bean id="slaveDataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource" destroy-method="close">
+        <property name="driverClass" value="${slave_mysql_jdbc_driver}" />
+        <property name="jdbcUrl" value="${slave_mysql_jdbc_url}" />
+        <property name="user" value="${slave_mysql_jdbc_user}" />
+        <property name="password" value="${slave_mysql_jdbc_password}" />
+        <!--idleConnectionTestPeriod：每60秒检查所有连接池中的空闲连接。-->
+        <property name="idleConnectionTestPeriod" value="60"></property>
+        <!--acquireIncrement：链接用完了自动增量3个。 -->
+        <property name="acquireIncrement" value="3"></property>
+        <!--maxPoolSize：连接池中保留的最大连接数。 -->
+        <property name="maxPoolSize" value="50"></property>
+        <!--maxStatements：最大链接数。-->
+        <property name="maxStatements" value="100"></property>
+        <!--numHelperThreads：异步操作，提升性能通过多线程实现多个操作同时被执行。Default: 3-->
+        <property name="numHelperThreads" value="5"></property>
+        <!--initialPoolSize：初始化时获取10个连接，取值应在minPoolSize与maxPoolSize之间。 -->
+        <property name="initialPoolSize" value="10"></property>
+    </bean>
+    <!-- 配置SqlSessionFactory对象 -->
+    <bean id="masterSqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <property name="dataSource" ref="masterDataSource" />
+        <property name="mapperLocations"  value="classpath:mapper/*.xml"/>
+    </bean>
+    <bean id="slaveSqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <property name="dataSource" ref="slaveDataSource" />
+        <property name="mapperLocations"  value="classpath:mapper/*.xml"/>
+    </bean>
+    <bean id="MasterAndSlaveSqlSessionTemplate" class="com.powerwin.dataSource.DynamicSqlSessionTemplate">
+        <constructor-arg index="0" ref="masterSqlSessionFactory" />
+        <property name="targetSqlSessionFactorys">
+            <map>
+                <entry value-ref="masterSqlSessionFactory" key="master"/>
+                <entry value-ref="slaveSqlSessionFactory" key="slave"/>
+            </map>
+        </property>
+    </bean>
+    <!-- 配置扫描Dao接口包，动态实现Dao接口，注入到spring容器中 -->
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <property name="basePackage" value="com.powerwin.dao" />
+        <property name="sqlSessionTemplateBeanName" value="MasterAndSlaveSqlSessionTemplate" />
+    </bean>
+    <aop:aspectj-autoproxy></aop:aspectj-autoproxy>
+    <import resource="switch_coagentquartz.xml"/>
+</beans>

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- 设置为IUserDao接口方法提供sql语句配置 -->
+<mapper namespace="com.powerwin.dao.DevuserDao">
+
+  <select id="queryData" resultType="java.util.Map">
+    SELECT a.id as devid,cpname,linkname,moblie,qqnumber,skype,cname,caddress,ywcard,ywcardpic,a.status as status,a.type as type,money,finish_money,a.update_time as update_time,a.create_time as create_time,idcard,wxnumber,locks,state,b.id as id,devid,name,b.type as medtype,pgname,downloadurl,addtype,moneytype,`desc`,ctype,cstype,sendarea,noaddtype,buckle,b.status as medstatus,b.update_time as medupdate_time,b.create_time as medcreate_time,appkey
+    FROM devuser a,devmedia b
+    WHERE  a.id=b.devid
+    AND a.update_time>#{start} or b.update_time>#{end}
+  </select>
+
+  <select id="queryMap" resultType="java.util.Map">
+    SELECT a.id planid, b.cpid as cpid,a.name as name,a.type as type,url,ctype,cstype,b.id as id,b.name as unitname, day_money,one_money,start_time,end_time,bj_start_time,bj_end_time,senddate,bjhourval,sendtype,sendarea,senddevmedia,shopname,shopdesc,onedesc,buttondesc,showpic,xxpic,b.status as unitstatus,statusres,c.status as cpstatus
+    FROM adsplan a,adsunit b,cp c
+    WHERE a.id=b.apid
+    AND b.cpid = c.id
+    AND a.update_time>#{start} OR b.update_time>#{end}
+  </select>
+
+  <update id="get_update">
+    UPDATE adsunit
+    SET statusres=#{statusres}
+    WHERE id=#{id}
+  </update>
+
+  <update id="get_update2">
+    UPDATE adsunit
+    SET statusres=#{statusres},status=#{status}
+    WHERE id=#{id}
+  </update>
+
+</mapper>

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:jee="http://www.springframework.org/schema/jee"
+	xmlns:tx="http://www.springframework.org/schema/tx" xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.5.xsd http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-2.5.xsd http://www.springframework.org/schema/jee http://www.springframework.org/schema/jee/spring-jee-2.5.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-2.5.xsd"
+	default-lazy-init="false">
+
+
+	<bean id="boot" class="com.powerwin.boot.BootServer"></bean>
+	<!--<bean id="boot" class="com.powerwin.boot.TestBoot"></bean>-->
+
+
+	<bean id="quartzCoagentJobVerify"
+		class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+		<property name="targetObject">
+			<ref bean="boot"></ref>
+		</property>
+		<property name="targetMethod" value="main" />
+		<property name="concurrent" value="false" />
+	</bean>
+
+
+	<bean id="quartzCoagentReadSmsTxtFile"
+		class="org.springframework.scheduling.quartz.SimpleTriggerFactoryBean">
+		<property name="jobDetail">
+			<ref bean="quartzCoagentJobVerify" />
+		</property>
+		<property name="startDelay">
+			<!-- 服务启动后延时10毫秒s开始计时任务 -->
+			<value>10</value>
+		</property>
+		<property name="repeatInterval">
+			<!-- 每隔10秒重试一次同步 -->
+			<value>10000</value>
+		</property>
+	</bean>
+
+	<!--第三步 启动定时任务,注意这里的ref bean -->
+	<bean id="quartzSchedulerFactoryBean"
+		class="org.springframework.scheduling.quartz.SchedulerFactoryBean"
+		destroy-method="destroy">
+		<property name="triggers">
+			<list>
+				<ref bean="quartzCoagentReadSmsTxtFile"></ref>
+			</list>
+		</property>
+	</bean>
+</beans>
