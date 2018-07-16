@@ -99,10 +99,16 @@ public class DBHistoryStore  extends RedisKeyValueStore {
 	
 	public void putId(int adid, String mac, String udid, long id) {
 
-		if(udid != null && udid!="") this.putId(adid, udid, id);
-		
+		if(udid != null && udid!=""){
+
+			this.putId(adid, udid, id);
+		}
+
 		mac = MACUtil.parse(mac);
-		if(mac != null && mac!="") this.putId(adid, mac, id);
+		if(mac != null && mac!=""){
+
+			this.putId(adid, mac, id);
+		}
 	}
 
 	public long put(int adid, String mac, String udid, CallbackItem item) {

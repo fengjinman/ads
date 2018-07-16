@@ -78,7 +78,8 @@ public class ShowProcessor extends BaseProcessor {
 		String udid = ListUtil.getString(vals, Index.UDID);
 		
 		//5
-		int uid = media.getDevid(); //开发者id
+		//开发者id
+		int uid = media.getDevid();
 		//20180705
 		int date = year * 10000 + mon *100 + day;
 		
@@ -130,7 +131,7 @@ public class ShowProcessor extends BaseProcessor {
 			
 			//0 
 			int saved = 0;
-//			int saved = unique == 0 || save || isStop ? 0 : 1;
+            //int saved = unique == 0 || save || isStop ? 0 : 1;
 			if(is_bool_monitor != 1){
 				saved = 1;
 			}

@@ -22,8 +22,6 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.List;
 import java.util.Map;
-
-
 public class JobProcessor extends CallbackProcessor {
 	
 	public static Logger LOG = LogManager.getLogger(JobProcessor.class);
@@ -237,7 +235,6 @@ public class JobProcessor extends CallbackProcessor {
 			}else {
 				String[] infoArr = info.split(",");
 				if(infoArr[0].equals("0")) {
-
 					int ctime = infoArr[1]==null?atime:Integer.parseInt(infoArr[1]);
 					//int fctime = infoArr[4]==null?ctime:Integer.parseInt(infoArr[4]);
 					int fctime = 0;
