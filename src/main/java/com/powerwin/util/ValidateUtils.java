@@ -26,7 +26,7 @@ public final class ValidateUtils {
 	/**
 	 * 验证是否为Null
 	 * 
-	 * @param object:为字符串则调用isEmpty
+	 * @param obj:为字符串则调用isEmpty
 	 * @return
 	 */
 	public static boolean isNull(Object obj) {
@@ -51,7 +51,7 @@ public final class ValidateUtils {
 	/**
 	 * 验证数字合法性，小数位不限制
 	 * 
-	 * @param numStr
+	 * @param str
 	 * @return 验证通过返回 true
 	 */
 	public static boolean isNumber(Object str) {

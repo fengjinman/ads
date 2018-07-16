@@ -1,13 +1,9 @@
 package com.powerwin.boot.thread;
-
-
 import com.powerwin.parser.Parser;
 import com.powerwin.parser.Parsers;
 import com.powerwin.processor.Processor;
 import com.powerwin.processor.Processors;
-
 import java.util.List;
-
 /**
  * 线程类，执行数据解析、处理
  */

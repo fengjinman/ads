@@ -4,6 +4,9 @@ import com.powerwin.boot.config.Define;
 import com.powerwin.boot.config.RedisConnection;
 import com.powerwin.cache.AdsCache;
 import com.powerwin.cache.MediaCache;
+import com.powerwin.dao.CallbackTableDemoMapper;
+import com.powerwin.dao.CpcDayMapper;
+import com.powerwin.dao.CpcHourMapper;
 import com.powerwin.entity.*;
 import com.powerwin.parser.ActionParser;
 import com.powerwin.store.CachedValue;
@@ -15,12 +18,17 @@ import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import redis.clients.jedis.Jedis;
 
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
 public class ClickProcessor extends CallbackProcessor {
 
 	public static Logger LOG = LogManager.getLogger(ClickProcessor.class);
+
+	CpcHourMapper cpcHourMapper = (CpcHourMapper)DaoUtil.getDao(CpcHourMapper.class);
+	CpcDayMapper cpcDayMapper = (CpcDayMapper)DaoUtil.getDao(CpcDayMapper.class);
+	CallbackTableDemoMapper callbackTableMapper = (CallbackTableDemoMapper)DaoUtil.getDao(CallbackTableDemoMapper.class);
 
 	public List<Object>[] process(List<Object> vals) {
 		
@@ -154,10 +162,19 @@ public class ClickProcessor extends CallbackProcessor {
 		CallbackItem item = this.getHistory(year, mon, day, type, adid, mac, udid);
 		if (item != null && item.isToday) {	//isToday 表示当天
 
-			CountValues cv = CountValues.create(action, 1, 0, 0, 0, 0, 0);
+//			CountValues cv = CountValues.create(action, 1, 0, 0, 0, 0, 0);
+//			Counter.getInstance().add(ck, cv);
 
 			// todo 这里有写入数据库的操作
-			Counter.getInstance().add(ck, cv);
+			CpcHour cpc_hour = getCpcHour(year,mon,day,hour,type,data_from,ad_from,game_id,1,0,0,0);
+			cpcHourMapper.insert(cpc_hour);
+
+			CpcDay cpc_day = getCpcDay(year,mon,day,type,data_from,ad_from,game_id,1,0,0,0);
+			cpcDayMapper.insert(cpc_day);
+
+			StringBuffer tablename = getCallbackTablename();
+			CallbackTableDemo callback = getCallBackInstance(data_from,ad_from,game_id,0,action,adid,appid,udid,uid,cid,0,ad.getPlanid());
+			callbackTableMapper.insert(tablename,callback);
 
 			LOG.warn(String.format("Click action exists for : item.date=%d item.id=%d item.adid=%d item.mac=%s item.udid=%s action=%d adid=%d mac=%s udid=%s",
 							item.date, item.id, item.adid, item.mac, item.udid, action, adid, mac, udid));
@@ -338,8 +355,19 @@ public class ClickProcessor extends CallbackProcessor {
 		int vinvalid =  (invalid > 0 ? 1 : 0);
 		int vsaved = (save ? 0 : 1);
 
-		CountValues cv = CountValues.create(action, vcount, vinvalid, 1, vsaved, income, cost);
-		Counter.getInstance().add(ck, cv);
+		//todo
+//		CountValues cv = CountValues.create(action, vcount, vinvalid, 1, vsaved, income, cost);
+//		Counter.getInstance().add(ck, cv);
+
+		CpcHour cpc_hour = getCpcHour(year,mon,day,hour,type,data_from,ad_from,game_id,vcount,vinvalid,0,vsaved);
+		cpcHourMapper.insert(cpc_hour);
+
+		CpcDay cpc_day = getCpcDay(year,mon,day,type,data_from,ad_from,game_id,vcount,vinvalid,0,vsaved);
+		cpcDayMapper.insert(cpc_day);
+
+		StringBuffer tablename = getCallbackTablename();
+		CallbackTableDemo callback = getCallBackInstance(data_from,ad_from,game_id,vsaved,action,adid,appid,udid,uid,cid,0,ad.getPlanid());
+		callbackTableMapper.insert(tablename,callback);
 
 		//广告ID：15477 ，特殊回调模式，所以增加点击记录
 		if(adid == 15477 ){
@@ -357,5 +385,114 @@ public class ClickProcessor extends CallbackProcessor {
 		}
 
 		return null;
+	}
+	/**
+	 * 填充CallbackTableDemo对象
+	 * @param data_from
+	 * @param ad_from
+	 * @param game_id
+	 * @param saved
+	 * @param action
+	 * @param adid
+	 * @param appid
+	 * @param udid
+	 * @param uid
+	 * @param cid
+	 * @param is_bool_monitor
+	 * @param planid
+	 * @return
+	 */
+	public CallbackTableDemo getCallBackInstance(int data_from,int ad_from,int game_id,int saved,int action,int adid,int appid,String udid,int uid,int cid,int is_bool_monitor,int planid){
+		CallbackTableDemo c = new CallbackTableDemo();
+		c.setDataFrom(data_from);
+		c.setAdFrom(ad_from);
+		c.setGameId(game_id);
+		c.setSaved((short) saved);
+		c.setCid(cid);
+		c.setUid(uid);
+		c.setAdid(adid);
+		c.setAction((short) action);
+		c.setIsBoolMonitor((short)is_bool_monitor);
+		c.setAppid(appid);
+		c.setAdplanid(planid);
+		c.setUdid(udid);
+		return c;
+	}
+
+	/**
+	 * 生成回调表名
+	 * @return
+	 */
+	public StringBuffer getCallbackTablename(){
+		StringBuffer base = new StringBuffer("cpc_callback_");
+		Date d = new Date();
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
+		String time = sdf.format(d);
+		base.append(time);
+		return base;
+	}
+
+	/**
+	 * 填充CpcHour对象
+	 * @param year
+	 * @param mon
+	 * @param day
+	 * @param hour
+	 * @param type
+	 * @param data_from
+	 * @param ad_from
+	 * @param game_id
+	 * @param click_count
+	 * @param click_invalid
+	 * @param click_unique
+	 * @param click_saved
+	 * @return
+	 */
+	public CpcHour getCpcHour(int year,int mon,int day,int hour,int type,int data_from,int ad_from,int game_id,int click_count,int click_invalid,int click_unique,int click_saved){
+		CpcHour c = new CpcHour();
+		c.setYear((short)year);
+		c.setMon((short)mon);
+		c.setDay((short)day);
+		c.setHour((short)hour);
+		c.setType((short)type);
+		c.setDataFrom((short)data_from);
+		c.setAdFrom((short)ad_from);
+		c.setGameId((short)game_id);
+		c.setShowCount(click_count);
+		c.setShowInvalid(click_invalid);
+		c.setShowUnique(click_unique);
+		c.setShowSaved(click_saved);
+		return c;
+	}
+
+	/**
+	 * 填充CpcDay对象
+	 * @param year
+	 * @param mon
+	 * @param day
+	 * @param type
+	 * @param data_from
+	 * @param ad_from
+	 * @param game_id
+	 * @param click_count
+	 * @param click_invalid
+	 * @param click_unique
+	 * @param click_saved
+	 * @return
+	 */
+	public CpcDay getCpcDay(int year,int mon,int day,int type,int data_from,int ad_from,int game_id,int click_count,int click_invalid,int click_unique,int click_saved){
+		CpcDay c = new CpcDay();
+		c.setYear((short)year);
+		c.setMon((short)mon);
+		c.setDay((short)day);
+		c.setType((short)type);
+		c.setDataFrom((short)data_from);
+		c.setAdFrom((short)ad_from);
+		c.setGameId((short)game_id);
+		c.setShowCount(click_count);
+		c.setShowInvalid(click_invalid);
+		c.setShowUnique(click_unique);
+		c.setShowSaved(click_saved);
+		return c;
 	}
 }

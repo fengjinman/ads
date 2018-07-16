@@ -4,7 +4,6 @@ import com.powerwin.util.RedisQueue;
 import com.powerwin.util.SimpleFileWriter;
 import com.powerwin.boot.timetask.TimeCache;
 import com.powerwin.boot.config.Configuration;
-
 import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -46,11 +45,12 @@ public class QueueThread extends Thread {
 		
 		ExecutorService executorService = null;
 		if(nThreads > 1) {
+			//创建一个定长线程池，可控制线程最大并发数，超出的线程会在队列中等待
 			executorService = Executors.newFixedThreadPool(nThreads);
 		} else if(nThreads == 0) {
+			//创建一个可缓存线程池，如果线程池长度超过需要的线程数量，可灵活回收空闲线程，若无可回收，则新建线程
 			executorService = Executors.newCachedThreadPool();
 		}
-		
 		while (loop) {
 			line = queue.pop(queueName);
 			if (line == null) {
@@ -79,7 +79,6 @@ public class QueueThread extends Thread {
 				executorService.execute(new TaskRunnable(line));
 			}
 		}
-		
 		if(executorService != null) {
 			executorService.shutdown();
 			try {

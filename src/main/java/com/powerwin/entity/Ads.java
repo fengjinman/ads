@@ -1,7 +1,6 @@
 package com.powerwin.entity;
 
 import com.alibaba.fastjson.JSONObject;
-
 import java.io.Serializable;
 import java.util.Map;
 
@@ -9,31 +8,30 @@ import java.util.Map;
 public class Ads extends Common implements Serializable {
 
 	private static final long serialVersionUID = -8438261930942665353L;
-	//
+
 	public Ads() {
 		super();
 	}
-  
-	private int planid;// 广告计划ID
-    private int cpid; //
-    private String name; //
-    private int type; //
-    private String url; //
-    private int ctype; //
-    private int cstype; //
-    private int status; //
-    private int id; //
-    private String  unitname; //
-    private float  day_money; //
-    private float one_money; //
-    private int start_time; //
-    private int end_time; //
-    private int bj_start_time; //
-    private int bj_end_time; //
-    private String senddate; //
-    private int bjhourval; //
-    private String  sendtype; //
-    private String sendarea; //
+	private int planid;
+    private int cpid;
+    private String name;
+    private int type;
+    private String url;
+    private int ctype;
+    private int cstype;
+    private int status;
+    private int id;
+    private String  unitname;
+    private float  day_money;
+    private float one_money;
+    private int start_time;
+    private int end_time;
+    private int bj_start_time;
+    private int bj_end_time;
+    private String senddate;
+    private int bjhourval;
+    private String  sendtype;
+    private String sendarea;
     private String senddevmedia ;
     private  String shopname;
     private String  shopdesc;
@@ -46,8 +44,6 @@ public class Ads extends Common implements Serializable {
     }
 
 
-
-
     public void setCpstatus(int cpstatus) {
         this.cpstatus = cpstatus;
     }
@@ -56,9 +52,6 @@ public class Ads extends Common implements Serializable {
     public int getUnitstatus() {
         return unitstatus;
     }
-
-
-
 
     public void setUnitstatus(int unitstatus) {
         this.unitstatus = unitstatus;

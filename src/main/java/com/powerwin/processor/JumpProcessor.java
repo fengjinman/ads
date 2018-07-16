@@ -1,6 +1,4 @@
 package com.powerwin.processor;
-
-
 import com.powerwin.boot.config.Define;
 import com.powerwin.boot.config.RedisConnection;
 import com.powerwin.cache.AdsCache;
@@ -14,11 +12,8 @@ import com.powerwin.util.*;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import redis.clients.jedis.Jedis;
-
-
 import java.util.Date;
 import java.util.List;
-
 
 public class JumpProcessor extends CallbackProcessor {
 
@@ -266,7 +261,6 @@ public class JumpProcessor extends CallbackProcessor {
 				}
 			}
 		}
-		
 		return null;
 	}
 }

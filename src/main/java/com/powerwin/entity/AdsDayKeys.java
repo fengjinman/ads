@@ -81,8 +81,11 @@ public class AdsDayKeys implements CountKeys {
 	private int hash = 0;
 	@Override
 	public int hashCode() {
-		if(hash != 0) return hash;
-		
+		if(hash != 0) {
+
+			return hash;
+		}
+
 		Object[] vals = this.getValues();
 		int h = 0;
 		int off = 0;
@@ -98,15 +101,39 @@ public class AdsDayKeys implements CountKeys {
 	public boolean equals(Object obj) {
 		AdsDayKeys that = (AdsDayKeys)obj;
 
-		if(this.created != that.created) return false;
-		if(this.type != that.type) return false;
-		if(this.ad_from != that.ad_from) return false;
-		if(this.data_from != that.data_from) return false;
-		if(this.adid != that.adid) return false;
-		if(this.cid != that.cid) return false;
-		if(this.game_id != that.game_id) return false;
-		if(this.adplanid != that.adplanid) return false;
-		
+		if(this.created != that.created) {
+
+			return false;
+		}
+		if(this.type != that.type) {
+
+			return false;
+		}
+		if(this.ad_from != that.ad_from) {
+
+			return false;
+		}
+		if(this.data_from != that.data_from) {
+
+			return false;
+		}
+		if(this.adid != that.adid) {
+
+			return false;
+		}
+		if(this.cid != that.cid) {
+
+			return false;
+		}
+		if(this.game_id != that.game_id) {
+
+			return false;
+		}
+		if(this.adplanid != that.adplanid) {
+
+			return false;
+		}
+
 		return true;
 	}
 }

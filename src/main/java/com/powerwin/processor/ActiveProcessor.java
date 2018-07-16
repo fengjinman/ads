@@ -7,6 +7,9 @@ import com.powerwin.boot.config.Define;
 import com.powerwin.boot.config.RedisConnection;
 import com.powerwin.cache.AdsCache;
 import com.powerwin.cache.MediaCache;
+import com.powerwin.dao.CallbackTableDemoMapper;
+import com.powerwin.dao.CpcDayMapper;
+import com.powerwin.dao.CpcHourMapper;
 import com.powerwin.entity.*;
 import com.powerwin.parser.CallbackParser;
 import com.powerwin.store.*;
@@ -18,6 +21,8 @@ import redis.clients.jedis.Jedis;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -25,6 +30,10 @@ import java.util.Map;
 public class ActiveProcessor extends CallbackProcessor {
 
     public static Logger LOG = LogManager.getLogger(ActiveProcessor.class);
+
+    CpcHourMapper cpcHourMapper = (CpcHourMapper)DaoUtil.getDao(CpcHourMapper.class);
+    CpcDayMapper cpcDayMapper = (CpcDayMapper)DaoUtil.getDao(CpcDayMapper.class);
+    CallbackTableDemoMapper callbackTableMapper = (CallbackTableDemoMapper)DaoUtil.getDao(CallbackTableDemoMapper.class);
 
     public List<Object>[] process(List<Object> vals) {
 
@@ -61,7 +70,7 @@ public class ActiveProcessor extends CallbackProcessor {
             return null;
         }
         // by jackcao add host scress start
-       if (type == 6) {// 广告类型是热门推荐，单独处理
+        if (type == 6) {// 广告类型是热门推荐，单独处理
             new HotscreenActiveProcessor().process(vals);
             return null;
         }
@@ -195,14 +204,26 @@ public class ActiveProcessor extends CallbackProcessor {
                 // 上报数据但不计入广告主数据 ad.getIsHsReport() == 2 || ad.getIsHsReport() == 0
                 if (false) {
 
-                    // 广告主记费
-                    DetailHourKeys ck = DetailHourKeys.create(year, mon, day, hour, type, item.data_from, item.ad_from,
-                            item.appid, item.uid, item.adid, item.cid,0,0);
+                    // 广告主记费   原代码
+//                    DetailHourKeys ck = DetailHourKeys.create(year, mon, day, hour, type, item.data_from, item.ad_from,
+//                            item.appid, item.uid, item.adid, item.cid,0,0);
+//                    CountValues cv = CountValues.create(action, 1, invalid, 0, 0, income, 0);
+//                    Counter.getInstance().add(ck, cv);
 
                     LOG.warn(String.format("advertisers cover process ：action=%d, item.income=%.2f, income=%.2f",
                             action, item.income, income));
-                    CountValues cv = CountValues.create(action, 1, item.invalid > 0 ? 1 : 0, 0, 0, income, 0);
-                    Counter.getInstance().add(ck, cv);
+                    int invalid = item.invalid > 0 ? 1 : 0;
+
+                    // todo
+                    CpcHour cpc_hour = getCpcHour(year,mon,day,hour,type,item.data_from,item.ad_from,0,1,invalid,0,0);
+                    cpcHourMapper.insert(cpc_hour);
+
+                    CpcDay cpc_day = getCpcDay(year,mon,day,type,data_from,ad_from,0,1,invalid,0,0);
+                    cpcDayMapper.insert(cpc_day);
+
+                    StringBuffer tablename = getCallbackTablename();
+                    CallbackTableDemo callback = getCallBackInstance(data_from,ad_from,0,0,action,adid,appid,udid,item.uid,item.cid,0,ad.getPlanid());
+                    callbackTableMapper.insert(tablename,callback);
 
                     // 更新激活来源
                     item.process = Define.FROM_SDK;
@@ -227,6 +248,7 @@ public class ActiveProcessor extends CallbackProcessor {
 
         int date = this.date(vals);
         // 同一IP同一广告IP数不得超过设定值（刘卿）
+        //todo
         ipcount = IPCountStore.getInstance().add("IP_" + date, action, adid, item.ip, 1);
 
         int invalid = 0;
@@ -475,10 +497,21 @@ public class ActiveProcessor extends CallbackProcessor {
         }
 
         // 激活统计
-        DetailHourKeys ck = DetailHourKeys.create(year, mon, day, hour, type, data_from, ad_from, appid, uid, adid,
-                cid,0,0);
-        CountValues cv = CountValues.create(action, count, invalid > 0 ? 1 : 0, unique, saved, income, cost);
-        Counter.getInstance().add(ck, cv);
+        //todo
+//        DetailHourKeys ck = DetailHourKeys.create(year, mon, day, hour, type, data_from, ad_from, appid, uid, adid,
+//                cid,0,0);
+//        CountValues cv = CountValues.create(action, count, invalid > 0 ? 1 : 0, unique, saved, income, cost);
+//        Counter.getInstance().add(ck, cv);
+
+        CpcHour cpc_hour = getCpcHour(year,mon,day,hour,type,item.data_from,item.ad_from,0,1,invalid,0,0);
+        cpcHourMapper.insert(cpc_hour);
+
+        CpcDay cpc_day = getCpcDay(year,mon,day,type,data_from,ad_from,0,1,invalid,0,0);
+        cpcDayMapper.insert(cpc_day);
+
+        StringBuffer tablename = getCallbackTablename();
+        CallbackTableDemo callback2 = getCallBackInstance(data_from,ad_from,0,0,action,adid,appid,udid,item.uid,item.cid,0,ad.getPlanid());
+        callbackTableMapper.insert(tablename,callback2);
 
         // 数据激活
         item.create_time = this.datetime(vals).timestamp();
@@ -509,6 +542,7 @@ public class ActiveProcessor extends CallbackProcessor {
                 return null;
             }
         }
+
         RedisStore.getInstance().addActive(item.mac + item.udid, adid);
 
         updateProcessInfo(action, adid, active_num, mac, udid, media, len);
@@ -519,6 +553,116 @@ public class ActiveProcessor extends CallbackProcessor {
         // 快速任务实时上报IDFA给广告主
         reportToCp(ad, item);
         return null;
+    }
+
+    /**
+     * 填充CpcHour对象
+     * @param year
+     * @param mon
+     * @param day
+     * @param hour
+     * @param type
+     * @param data_from
+     * @param ad_from
+     * @param cost
+     * @param active_count
+     * @param active_invalid
+     * @param active_unique
+     * @param active_saved
+     * @return
+     */
+    public CpcHour getCpcHour(int year,int mon,int day,int hour,int type,int data_from,int ad_from,int cost,int active_count,int active_invalid,int active_unique,int active_saved){
+        CpcHour c = new CpcHour();
+        c.setYear((short)year);
+        c.setMon((short)mon);
+        c.setDay((short)day);
+        c.setHour((short)hour);
+        c.setType((short)type);
+        c.setDataFrom((short)data_from);
+        c.setAdFrom((short)ad_from);
+        c.setActiveCost((float)cost);
+        c.setActiveCount(active_count);
+        c.setShowInvalid(active_invalid);
+        c.setShowUnique(active_unique);
+        c.setShowSaved(active_saved);
+        return c;
+    }
+
+    /**
+     * 填充CallbackTableDemo对象
+     * @param data_from
+     * @param ad_from
+     * @param game_id
+     * @param saved
+     * @param action
+     * @param adid
+     * @param appid
+     * @param udid
+     * @param uid
+     * @param cid
+     * @param is_bool_monitor
+     * @param planid
+     * @return
+     */
+    public CallbackTableDemo getCallBackInstance(int data_from,int ad_from,int game_id,int saved,int action,int adid,int appid,String udid,int uid,int cid,int is_bool_monitor,int planid){
+        CallbackTableDemo c = new CallbackTableDemo();
+        c.setDataFrom(data_from);
+        c.setAdFrom(ad_from);
+        c.setGameId(game_id);
+        c.setSaved((short) saved);
+        c.setCid(cid);
+        c.setUid(uid);
+        c.setAdid(adid);
+        c.setAction((short) action);
+        c.setIsBoolMonitor((short)is_bool_monitor);
+        c.setAppid(appid);
+        c.setAdplanid(planid);
+        c.setUdid(udid);
+        return c;
+    }
+
+    /**
+     * 生成回调表名
+     * @return
+     */
+    public StringBuffer getCallbackTablename(){
+        StringBuffer base = new StringBuffer("cpc_callback_");
+        Date d = new Date();
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
+        String time = sdf.format(d);
+        base.append(time);
+        return base;
+    }
+
+    /**
+     * 填充CpcDay对象
+     * @param year
+     * @param mon
+     * @param day
+     * @param type
+     * @param data_from
+     * @param ad_from
+     * @param cost
+     * @param active_count
+     * @param active_invalid
+     * @param active_unique
+     * @param active_saved
+     * @return
+     */
+    public CpcDay getCpcDay(int year,int mon,int day,int type,int data_from,int ad_from,int cost,int active_count,int active_invalid,int active_unique,int active_saved){
+        CpcDay c = new CpcDay();
+        c.setYear((short)year);
+        c.setMon((short)mon);
+        c.setDay((short)day);
+        c.setType((short)type);
+        c.setDataFrom((short)data_from);
+        c.setAdFrom((short)ad_from);
+        c.setActiveCost((float)cost);
+        c.setActiveCount(active_count);
+        c.setShowInvalid(active_invalid);
+        c.setShowUnique(active_unique);
+        c.setShowSaved(active_saved);
+        return c;
     }
 
     /**

@@ -7,7 +7,9 @@ import java.io.InputStream;
 import java.util.InvalidPropertiesFormatException;
 import java.util.Properties;
 
-
+/**
+ * 读取配置文件的类   config.properties
+ */
 public class Configuration extends Properties {
 
 	private static final long serialVersionUID = 5044046358027224342L;

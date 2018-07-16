@@ -1,10 +1,6 @@
 package com.powerwin.entity;
-
-
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
-
-
 public class UserScore {
 
     public static Logger LOG = LogManager.getLogger(UserScore.class);
