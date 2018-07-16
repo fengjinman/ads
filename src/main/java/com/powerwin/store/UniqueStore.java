@@ -16,7 +16,16 @@ public class UniqueStore extends KeyValueStore<Long> {
 	public static String getPath(String area, int date, int type, int action) {
 		return String.format("%s/%d/%d/%d", area, date, type, action);
 	}
-	
+
+
+	/**
+	 *  path对应store,储存在静态变量STORES上
+	 * @param area
+	 * @param date
+	 * @param type
+	 * @param action
+	 * @return
+	 */
 	public static UniqueStore getInstance(String area, int date, int type, int action) {
 
 		String path = getPath(area, date, type, action);
@@ -47,8 +56,10 @@ public class UniqueStore extends KeyValueStore<Long> {
 		
 		if(udid != null && udid!="") {
 			Long value = this.getId(adid, udid);
-			if(value != null) 
+			if(value != null) {
 				return value;
+
+			}
 		}
 		
 		mac = MACUtil.parse(mac);

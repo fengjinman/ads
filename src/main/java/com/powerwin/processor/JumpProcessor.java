@@ -1,19 +1,22 @@
 package com.powerwin.processor;
 
 
+import com.powerwin.boot.config.Define;
+import com.powerwin.boot.config.RedisConnection;
 import com.powerwin.cache.AdsCache;
 import com.powerwin.cache.MediaCache;
-import com.powerwin.entity.Ads;
-import com.powerwin.entity.CallbackItem;
-import com.powerwin.entity.Media;
+import com.powerwin.entity.*;
 import com.powerwin.parser.ActionParser;
+import com.powerwin.store.DBHistoryStore;
+import com.powerwin.store.FileStore;
 import com.powerwin.store.RedisStore;
-import com.powerwin.util.ListUtil;
-import com.powerwin.util.RemainActiveUtil;
+import com.powerwin.util.*;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
+import redis.clients.jedis.Jedis;
 
 
+import java.util.Date;
 import java.util.List;
 
 
@@ -84,20 +87,25 @@ public class JumpProcessor extends CallbackProcessor {
 		}
 		
 		//状态 1新广告,2审核通过,，3拒绝，4启动 5 停止 6软删除，7调试，8暂停, 9 留存
-//		if(ad.getState() == 5 && ad.getIs_hand_stop() == 1){	//手动停止的广告，不用做留存了
-//			isStop = true;
-//		} else if(ad.getState() == 5 ||  ad.getState() == 8   ||  ad.getState() == 9){			//留存广告，超过1周的
-//			int current = (int) (System.currentTimeMillis()/1000);
-//			if(current - ad.getUpdateTime() > 3600 * 24 * 7){
-//				isStop = true;
-//			}
-//		} else if(ad.getState() != 4 && ad.getState() != 7 && media.getType() != 2) {
-//			isStop = true;
-//		}
+		// todo 手动关闭条件 ad.getIs_hand_stop() == 1
+		//手动停止的广告，不用做留存了
+		if(ad.getStatus() == 5){
+			isStop = true;
+		} else if(ad.getStatus() == 5 ||  ad.getStatus() == 8   || ad.getStatus() == 9){
+			//留存广告，超过1周的
+			int current = (int) (System.currentTimeMillis()/1000);
+			// 原为：ad.getUpdateTime()
+			if(current - ad.getEnd_time() > 3600 * 24 * 7){
+				isStop = true;
+			}
+		} else if(ad.getStatus() != 4 && ad.getStatus() != 7 && media.getType() != 2) {
+			isStop = true;
+		}
 
 		// 1 应用 3 渠道
 		int data_from = media.getType() == 1 ? 1 : 3;
 //		int ad_from = ad.getDataFrom();
+		int ad_from = 0;
 
 		int year = ListUtil.getInt(vals, Index.YEAR);
 		int mon = ListUtil.getInt(vals, Index.MON);
@@ -108,9 +116,13 @@ public class JumpProcessor extends CallbackProcessor {
 		
 //		int uid = media.getUid();
 //		int cid = ad.getCid();
+		int uid = 0;
+		int cid = 0;
 		int date = year * 10000 + mon * 100 + day;
+		int game_id = 0;
+		int adplanid = 0;
 		
-//		DetailHourKeys ck = DetailHourKeys.create(year, mon, day, hour, type, data_from, ad_from, appid, uid, adid, cid);
+		DetailHourKeys ck = DetailHourKeys.create(year, mon, day, hour, type, data_from, ad_from, appid, uid, adid, cid,game_id,adplanid);
 		int unique = checkUnique(date, type, action, adid, appid, mac, udid);
 		int saved = 1;
 		
@@ -125,17 +137,19 @@ public class JumpProcessor extends CallbackProcessor {
 		}*/
 		
 		//特殊控量    
-//		RemainActiveUtil.count(udid, mac, ad);
+		RemainActiveUtil.count(udid, mac, ad);
 		
 		if(unique == 1) {
 			CallbackItem item = this.getHistory(year, mon, day, type, adid, mac, udid);
-			//DBHistoryStore.getInstance(FileStore.STORE_STORE, date, type, Define.ACTION_CLICK).exists(adid, mac, udid);
+			DBHistoryStore.getInstance(FileStore.STORE_STORE, date, type, Define.ACTION_CLICK).exists(adid, mac, udid);
 			if (item == null) {
 				
 				item = CallbackItem.parseFromLog(vals, media, ad);
 //				item.cid = ad.getCid();
 //				item.uid = media.getUid();
-				
+				item.cid = 0;
+				item.uid = 0;
+
 				/*
 				if(media.getState() != 1 && media.getState() != 4 && media.getType() != 2) {
 					isStop = true;
@@ -147,8 +161,8 @@ public class JumpProcessor extends CallbackProcessor {
 				*/
 				
 				int invalid =  0; //(media.getState() == 1) ? 0 : 4;
-				//是否启用防作弊	liuhuiya
-//				if(media.getIsEnable() == 0 ){ //启用
+				//是否启用防作弊	liuhuiya  media.getIsEnable() == 0
+				if(true){
 					/**
 					 * DID SESSION
 					 */
@@ -181,65 +195,77 @@ public class JumpProcessor extends CallbackProcessor {
 					if(rload != null && rload.length() > 0) {
 						boolean r = Boolean.parseBoolean(rload);
 						if(r){
-							 if(invalid == 0) invalid = 16;
+							 if(invalid == 0){
+
+								 invalid = 16;
+							 }
 						}
 					}
 					//越狱扣量
 					if(root == 1){
-						 if(invalid == 0) invalid = 17;	
+						 if(invalid == 0) {
+							 invalid = 17;
+						 }
 					}
 				}
 				
-				//媒体特殊处理
-//				if(media.getMid() == 5656) {
-//					if(osver.contains("7.")){
-//						 if(invalid == 0) invalid = 10;		//osver系统版本作弊屏蔽
-//					}
-//				}
-//
-//				item.invalid = item.invalid == 0 ? invalid : item.invalid;
-//				if(item.invalid > 0){
-//					item.saved = 1;
-//				}else {
-//					DataSaveRole role = DataSave.getRole(media, ad);
-//					save = DataSave.getSave(role);
-//					item.saved = save ? 1 : 0;
-//				}
-//				if(save || item.saved > 0) saved = 0;
-//				item.action = Define.ACTION_CLICK;
-				
-//				LOG.trace(String.format("update item to database jump mac=%s udid=%s appid=%d adid=%d invalid=%d saved=%d", mac, udid, appid, adid, invalid,item.saved));
-//				DBHistoryStore.getInstance(FileStore.STORE_STORE, date, type, Define.ACTION_CLICK).put(adid, mac,udid, item);
-//				CountValues cv = CountValues.create(Define.ACTION_CLICK, 1, 0, 1, saved, 0, 0);
-//				Counter.getInstance().add(ck, cv);
+				//媒体特殊处理   media.getMid() == 5656
+				if(true) {
+					if(osver.contains("7.")){
+						 if(invalid == 0) {
+							 //osver系统版本作弊屏蔽
+							 invalid = 10;
+						 }
+					}
+				}
+
+				item.invalid = item.invalid == 0 ? invalid : item.invalid;
+				if(item.invalid > 0){
+					item.saved = 1;
+				}else {
+					DataSave.DataSaveRole role = DataSave.getRole(media, ad);
+					save = DataSave.getSave(role);
+					item.saved = save ? 1 : 0;
+				}
+				if(save || item.saved > 0) {
+					saved = 0;
+				}
+				item.action = Define.ACTION_CLICK;
+
+				LOG.trace(String.format("update item to database jump mac=%s udid=%s appid=%d adid=%d invalid=%d saved=%d", mac, udid, appid, adid, invalid,item.saved));
+				DBHistoryStore.getInstance(FileStore.STORE_STORE, date, type, Define.ACTION_CLICK).put(adid, mac,udid, item);
+				// todo
+				CountValues cv = CountValues.create(Define.ACTION_CLICK, 1, 0, 1, saved, 0, 0);
+				Counter.getInstance().add(ck, cv);
 			}
-//		}
+		}
 		
 		int vcount = 1;
 		int vunique = 1;
-//		int vsaved = saved;
+		int vsaved = saved;
 		/*
 		if(RAND.nextInt(100) < 16) {
 			vcount = vunique = vsaved = 0;
 		}
 		*/
-//		CountValues cv = CountValues.create(action, vcount, 0, vunique, vsaved, 0, 0);
-//		Counter.getInstance().add(ck, cv);
+		// todo
+		CountValues cv = CountValues.create(action, vcount, 0, vunique, vsaved, 0, 0);
+		Counter.getInstance().add(ck, cv);
 		
 		//广告ID：15477 ，特殊回调模式，所以增加点击记录
-//		if(adid == 15477 ) {
-//			Jedis jMigu = null;
-//			try {
-//				jMigu = RedisConnection.getInstance("migu");
-//				String rKey = "MIGU_"+ DateUtils.formatMigu(new Date());
-//				jMigu.hset(rKey, udid, "1");
-//			} catch (Exception e) {
-//			}finally {
-//				if(jMigu != null) {
-//					RedisConnection.close("migu", jMigu);
-//				}
-//			}
-//		}
+		if(adid == 15477 ) {
+			Jedis jMigu = null;
+			try {
+				jMigu = RedisConnection.getInstance("migu");
+				String rKey = "MIGU_"+ DateUtils.formatMigu(new Date());
+				jMigu.hset(rKey, udid, "1");
+			} catch (Exception e) {
+			}finally {
+				if(jMigu != null) {
+					RedisConnection.close("migu", jMigu);
+				}
+			}
+		}
 		
 		return null;
 	}

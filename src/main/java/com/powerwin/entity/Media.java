@@ -45,7 +45,6 @@ public class Media extends Common  implements Serializable {
     protected String sendarea;
     protected String noaddtype;
     protected int buckle;
-
     protected int medstatus;
     protected String appkey;
     protected int medupdate_time;
