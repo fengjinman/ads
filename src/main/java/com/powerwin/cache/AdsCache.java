@@ -18,7 +18,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * 缓存广告数据到redis
+ * 刷新redis中的缓存
  */
 public class AdsCache {
 	
@@ -27,11 +27,12 @@ public class AdsCache {
 	private static AdsCache INSTANCE = new AdsCache();
 	private static int current = 0;
 	public static class AdsSorted {
-		public String debug = "";
 		//启动
-		public String pause = "";
-		//暂停
+		public String debug = "";
+		//释放
 		public String release = "";
+		//暂停
+		public String pause = "";
 		//手动停止
 		public String stop = "";
 	}
@@ -93,13 +94,15 @@ public class AdsCache {
 						LOG.debug("exception ads item new");
 						continue;
 					}
-					String statusres;
+					String statusres = "";
 					int unitstatus = 1;
 					//重新核算剩余金额 @todo
 					//MinuteAdsPlan.pauseAdByCount(ads.getAdid());
 					//广告上线，1 : 启动  2: 暂停  3: 停止
 					if( ads.getUnitstatus() == 3 ) {
+
 					    sort.stop += ","+String.valueOf(ads.getId());
+
 					    statusres="手动停止";
 
 					    dao.get_update(statusres,ads.getId());
@@ -215,7 +218,7 @@ public class AdsCache {
                         sort.stop += ","+String.valueOf(ads.getId());
 					}
 
-					//在此处赋值
+					//储存在map中 相当于程序缓存，给线程类使用
 					map.put(ads.getId(), ads);
 				}
 			}
@@ -241,7 +244,7 @@ public class AdsCache {
 		}
 	}
 	
-	 public  boolean isBoolenTime(int bjtime, String strlist){  
+	public  boolean isBoolenTime(int bjtime, String strlist){
 	     long mts = System.currentTimeMillis() + (bjtime * 60*60*1000);
 	     Calendar cal = new GregorianCalendar();
 	     cal.setTimeInMillis(mts);
@@ -250,9 +253,9 @@ public class AdsCache {
 	     String[] arrlist = strlist.split(",");
 	     boolean isret=  Arrays.asList(arrlist).contains(hour_s);
 	     return isret;  
-	 }
+	}
 	 
-	 public Ads get(int mid) {
+	public Ads get(int mid) {
 	        return map.get(mid);
 	   }
 	

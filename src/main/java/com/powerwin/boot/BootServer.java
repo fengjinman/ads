@@ -38,10 +38,10 @@ public class BootServer {
         ObjectCache.start();
 
         QueueThread showQueueThread = new QueueThread("ACTION_SHOW_REPORT");
-//        QueueThread clickQueueThread = new QueueThread("");
-//        QueueThread activeQueueThread = new QueueThread("");
-//        QueueThread jumpQueueThread = new QueueThread("");
-//        QueueThread jobQueueThread = new QueueThread("");
+//        QueueThread clickQueueThread = new QueueThread("ACTION_CLICK_REPORT");
+//        QueueThread activeQueueThread = new QueueThread("ACTION_ACTIVE_REPORT");
+//        QueueThread jumpQueueThread = new QueueThread("ACTION_JUMP_REPORT");
+//        QueueThread jobQueueThread = new QueueThread("ACTION_JOB_REPORT");
 
         showQueueThread.start();
 //        clickQueueThread.start();

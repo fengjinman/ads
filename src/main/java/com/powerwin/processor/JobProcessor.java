@@ -11,10 +11,7 @@ import com.powerwin.parser.CallbackParser;
 import com.powerwin.store.DBHistoryStore;
 import com.powerwin.store.FileStore;
 import com.powerwin.store.RedisStore;
-import com.powerwin.util.Counter;
-import com.powerwin.util.DataSave;
-import com.powerwin.util.ListUtil;
-import com.powerwin.util.RemainActiveUtil;
+import com.powerwin.util.*;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import redis.clients.jedis.Jedis;
@@ -22,6 +19,11 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.List;
 import java.util.Map;
+
+
+/**
+ * 任务处理器
+ */
 public class JobProcessor extends CallbackProcessor {
 	
 	public static Logger LOG = LogManager.getLogger(JobProcessor.class);
@@ -213,6 +215,8 @@ public class JobProcessor extends CallbackProcessor {
 		DetailHourKeys ck = DetailHourKeys.create(year,mon,day,hour,type,data_from,ad_from,appid,uid,adid,cid,0,0);
 		CountValues cv = CountValues.create(action, count, invalid, unique, saved, income, cost);	//invalid > 0 ? 1 : 0
 		Counter.getInstance().add(ck, cv);
+
+
 		//同步激活时间，用于控制深度任务的显示
 		Jedis jedisProcess = null;
 		try {
@@ -276,4 +280,6 @@ public class JobProcessor extends CallbackProcessor {
 		}
 		return null;
 	}
+
+
 }

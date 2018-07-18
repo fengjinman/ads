@@ -9,7 +9,11 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 /**
- * 一个定时任务，不断的获得当前时间保存在静态变量中
+ * 定时任务3
+ *
+ * 刷新当前时间
+ *
+ * 一秒延迟，一秒执行一次
  */
 public class TimeCache extends TimerTask{
 
@@ -24,8 +28,12 @@ public class TimeCache extends TimerTask{
     public void run(){
     	update();
     }
-    //不断的给静态变量赋值 执行多少次取决于线程和线程执行间隔
-    public static void update() {
+
+	/**
+	 * 不断的给静态变量赋值
+	 * 一秒延迟，一秒执行一次
+	 */
+	public static void update() {
     	long mts = System.currentTimeMillis();
     	time = mts/1000;
     	Calendar cal = new GregorianCalendar();

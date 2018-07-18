@@ -5,10 +5,16 @@ import com.powerwin.util.Counter;
 import com.powerwin.entity.CountStoreMap;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
-
 import java.util.Timer;
 import java.util.TimerTask;
 
+/**
+ * 定时任务2
+ *
+ * 更新数据库
+ *
+ * 一分钟延迟，一分钟执行一次
+ */
 public class ReportTimer extends TimerTask{
 
 	public static Logger LOG = LogManager.getLogger(ReportTimer.class);
@@ -20,6 +26,7 @@ public class ReportTimer extends TimerTask{
     		LOG.debug("count map is empty");
     		return;
     	}
+    	//这里开始插入数据库
     	store.save();
     	
     	//每分钟Dump数据后，重新核算剩余量和激活量
@@ -38,12 +45,10 @@ public class ReportTimer extends TimerTask{
     }
     
     public static void stop() {
-    	
     	if(timer != null) {
     		timer.cancel();
     		timer = null;
     	}
-    	
     	storeTask.run();
     }
 }

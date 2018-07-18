@@ -24,6 +24,8 @@ import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.util.Assert;
 
 /**
+ *
+ * 切换数据源
  * Created by fengjinman Administrator on 2018/7/11.
  */
 

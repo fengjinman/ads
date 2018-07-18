@@ -4,7 +4,6 @@ package com.powerwin.parser;
 
 import com.powerwin.boot.config.Define;
 import com.powerwin.util.ListUtil;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -12,7 +11,7 @@ import java.util.List;
 /**
  * BaseParser是定义好的公共的解析策略
  *
- * ActionParser的继承重写自己的特性  使用了内部接口，定义了规范
+ * ActionParser继承BaseParser后重写自己的特性  使用了内部接口，定义了规范
  */
 public class ActionParser extends BaseParser {
 

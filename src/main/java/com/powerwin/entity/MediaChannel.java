@@ -3,7 +3,7 @@ package com.powerwin.entity;
 import com.alibaba.fastjson.JSONObject;
 
 import java.util.Map;
-
+//todo  没用
 public class MediaChannel extends Media {
     
 	private static final long serialVersionUID = 1L;

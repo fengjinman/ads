@@ -20,7 +20,13 @@ import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 
-
+/**
+ * 定时任务1
+ *
+ * 刷新缓存
+ *
+ * 一分钟延迟，一分钟执行一次
+ */
 public class ObjectCache extends TimerTask {
 
 	public static Logger LOG = LogManager.getLogger(ObjectCache.class);

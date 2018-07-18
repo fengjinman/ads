@@ -12,7 +12,10 @@ import redis.clients.jedis.Jedis;
 
 import java.util.List;
 
-
+/**
+ * 激活处理器中出现热门推荐后单独处理
+ * 热门处理器
+ */
 public class HotscreenActiveProcessor {
 
 	private static final Logger LOG = LogManager.getLogger(HotscreenActiveProcessor.class);

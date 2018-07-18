@@ -8,8 +8,6 @@ import com.powerwin.boot.config.RedisConnection;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import redis.clients.jedis.Jedis;
-
-
 import java.io.*;
 import java.util.Iterator;
 import java.util.List;
@@ -51,7 +49,7 @@ public class MediaCache {
 			for (Map<String,Object> vals : items) {
 				MediaApp media = new MediaApp(vals);
 
-				//在这里为appMap赋值
+				//在这里为appMap赋值  给线程类使用
 				appMap.put(media.getId(), media);
 
 				// 1: 开发者是否锁定
@@ -84,6 +82,7 @@ public class MediaCache {
 
 		long redisUpdate = (updateString == null || updateString=="") ? 0 : Long.parseLong(updateString);
 
+		//刷新缓存
 		updateApps(jedis,redisUpdate);
 
 		update = System.currentTimeMillis()/1000-60;

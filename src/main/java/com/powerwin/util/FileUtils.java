@@ -56,25 +56,30 @@ public class FileUtils {
 		
 		// 内容分隔符
 		if (sep == null || sep.equals("")) {
-			sep = "\n"; // 默认以行分隔
+			// 默认以行分隔
+			sep = "\n";
 		}
 
-		StringBuffer rtnFileContent = new StringBuffer(); // 返回内容对象
+		// 返回内容对象
+		StringBuffer rtnFileContent = new StringBuffer();
 		FileInputStream fs = null;
 		InputStreamReader isr = null;
 		LineNumberReader br = null;
 		try {
-			fs = new FileInputStream(file); // 构造文件流
-			if (encoding == null || encoding.trim().equals("")) { // 文件流编码
+			// 构造文件流
+			fs = new FileInputStream(file);
+			// 文件流编码
+			if (encoding == null || encoding.trim().equals("")) {
 				isr = new InputStreamReader(fs);
 			} else {
 				isr = new InputStreamReader(fs, encoding.trim());
 			}
-			br = new LineNumberReader(isr, bufLen); // 读取文件
-
+			// 读取文件
+			br = new LineNumberReader(isr, bufLen);
 			String data = "";
 			while ((data = br.readLine()) != null) {
-				rtnFileContent.append(data).append(sep); // 拼接
+				// 拼接
+				rtnFileContent.append(data).append(sep);
 			}
 		} catch (IOException e) {
 			System.err
@@ -142,13 +147,17 @@ public class FileUtils {
 		if (!file.exists()) {
 			file.mkdirs();
 		}
-		boolean flag = false; // 写入文件是否成功
+		// 写入文件是否成功
+		boolean flag = false;
 		FileWriter fw = null;
 		BufferedWriter bw = null;
 		try {
-			fw = new FileWriter(filePath + File.separator + fileName, isWrite); // 构建文件写入流
-			bw = new BufferedWriter(fw, bufLen); // 构建写入流
-			bw.write(fileContent); // 写入文件内容
+			// 构建文件写入流
+			fw = new FileWriter(filePath + File.separator + fileName, isWrite);
+			// 构建写入流
+			bw = new BufferedWriter(fw, bufLen);
+			// 写入文件内容
+			bw.write(fileContent);
 			flag = true;
 		} catch (IOException e) {
 			System.err.println(".createFile() is error !");
@@ -159,8 +168,9 @@ public class FileUtils {
 				bw.flush();
 				bw.close();
 			}
-			if (fw != null)
+			if (fw != null){
 				fw.close();
+			}
 		}
 
 		return flag;

@@ -3,23 +3,16 @@ package com.powerwin.processor;
 
 import com.powerwin.cache.AdsCache;
 import com.powerwin.cache.MediaCache;
-import com.powerwin.dao.CallbackTableDemoMapper;
-import com.powerwin.dao.CpcDayMapper;
-import com.powerwin.dao.CpcHourMapper;
 import com.powerwin.entity.*;
 import com.powerwin.parser.ShowParser;
-import com.powerwin.util.DaoUtil;
+import com.powerwin.util.Counter;
 import com.powerwin.util.ListUtil;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
-
-
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.List;
 
 /**
- * 处理器实现类：显示
+ * 显示业务处理器
  */
 public class ShowProcessor extends BaseProcessor {
 	public static Logger LOG = LogManager.getLogger(ShowProcessor.class);
@@ -136,137 +129,13 @@ public class ShowProcessor extends BaseProcessor {
 				saved = 1;
 			}
 
-			// todo 数据插入
-			CpcHourMapper cpcHourMapper = (CpcHourMapper)DaoUtil.getDao(CpcHourMapper.class);
-			CpcDayMapper cpcDayMapper = (CpcDayMapper)DaoUtil.getDao(CpcDayMapper.class);
-			CallbackTableDemoMapper callbackTableMapper = (CallbackTableDemoMapper)DaoUtil.getDao(CallbackTableDemoMapper.class);
-
-			CpcHour cpc_hour = getCpcHour(year,mon,day,hour,type,data_from,ad_from,game_id,1,reqUnique,unique,saved);
-			cpcHourMapper.insert(cpc_hour);
-
-			CpcDay cpc_day = getCpcDay(year,mon,day,type,data_from,ad_from,game_id,1,reqUnique,unique,saved);
-			cpcDayMapper.insert(cpc_day);
-
-			StringBuffer tablename = getCallbackTablename();
-			CallbackTableDemo callback = getCallBackInstance(data_from,ad_from,game_id,saved,action,adid,appid,udid,uid,cid,is_bool_monitor,ad.getPlanid());
-			callbackTableMapper.insert(tablename,callback);
 			//去掉is_bool_monitor  增加adplanid
-//			DetailHourKeys ck = DetailHourKeys.create(year,mon,day,hour,type,data_from,ad_from,appid,uid,adid,cid,game_id,ad.getPlanid());
-//
-//			CountValues cv = CountValues.create(action, 1, reqUnique, unique, saved, 0, 0);
-//
-//			Counter.getInstance().add(ck, cv);
+			DetailHourKeys ck = DetailHourKeys.create(year,mon,day,hour,type,data_from,ad_from,appid,uid,adid,cid,game_id,ad.getPlanid());
+			CountValues cv = CountValues.create(action, 1, reqUnique, unique, saved, 0, 0);
+			Counter.getInstance().add(ck, cv);
 		}
 		return null;
 	}
 
-	/**
-	 * 填充CallbackTableDemo对象
-	 * @param data_from
-	 * @param ad_from
-	 * @param game_id
-	 * @param saved
-	 * @param action
-	 * @param adid
-	 * @param appid
-	 * @param udid
-	 * @param uid
-	 * @param cid
-	 * @param is_bool_monitor
-	 * @param planid
-	 * @return
-	 */
-	public CallbackTableDemo getCallBackInstance(int data_from,int ad_from,int game_id,int saved,int action,int adid,int appid,String udid,int uid,int cid,int is_bool_monitor,int planid){
-		CallbackTableDemo c = new CallbackTableDemo();
-		c.setDataFrom(data_from);
-		c.setAdFrom(ad_from);
-		c.setGameId(game_id);
-		c.setSaved((short) saved);
-		c.setCid(cid);
-		c.setUid(uid);
-		c.setAdid(adid);
-		c.setAction((short) action);
-		c.setIsBoolMonitor((short)is_bool_monitor);
-		c.setAppid(appid);
-		c.setAdplanid(planid);
-		c.setUdid(udid);
-		return c;
-	}
 
-	/**
-	 * 生成回调表名
-	 * @return
-	 */
-	public StringBuffer getCallbackTablename(){
-		StringBuffer base = new StringBuffer("cpc_callback_");
-		Date d = new Date();
-		SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
-		String time = sdf.format(d);
-		base.append(time);
-		return base;
-	}
-
-	/**
-	 * 填充CpcHour对象
-	 * @param year
-	 * @param mon
-	 * @param day
-	 * @param hour
-	 * @param type
-	 * @param data_from
-	 * @param ad_from
-	 * @param game_id
-	 * @param show_count
-	 * @param show_invalid
-	 * @param show_unique
-	 * @param show_saved
-	 * @return
-	 */
-	public CpcHour getCpcHour(int year,int mon,int day,int hour,int type,int data_from,int ad_from,int game_id,int show_count,int show_invalid,int show_unique,int show_saved){
-		CpcHour c = new CpcHour();
-        c.setYear((short)year);
-        c.setMon((short)mon);
-        c.setDay((short)day);
-        c.setHour((short)hour);
-        c.setType((short)type);
-        c.setDataFrom((short)data_from);
-        c.setAdFrom((short)ad_from);
-        c.setGameId((short)game_id);
-        c.setShowCount(show_count);
-        c.setShowInvalid(show_invalid);
-        c.setShowUnique(show_unique);
-        c.setShowSaved(show_saved);
-		return c;
-	}
-
-	/**
-	 * 填充CpcDay对象
-	 * @param year
-	 * @param mon
-	 * @param day
-	 * @param type
-	 * @param data_from
-	 * @param ad_from
-	 * @param game_id
-	 * @param show_count
-	 * @param show_invalid
-	 * @param show_unique
-	 * @param show_saved
-	 * @return
-	 */
-	public CpcDay getCpcDay(int year,int mon,int day,int type,int data_from,int ad_from,int game_id,int show_count,int show_invalid,int show_unique,int show_saved){
-		CpcDay c = new CpcDay();
-        c.setYear((short)year);
-        c.setMon((short)mon);
-        c.setDay((short)day);
-        c.setType((short)type);
-        c.setDataFrom((short)data_from);
-        c.setAdFrom((short)ad_from);
-        c.setGameId((short)game_id);
-		c.setShowCount(show_count);
-		c.setShowInvalid(show_invalid);
-		c.setShowUnique(show_unique);
-		c.setShowSaved(show_saved);
-		return c;
-	}
 }

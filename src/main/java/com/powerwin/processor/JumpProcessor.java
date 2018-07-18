@@ -3,9 +3,6 @@ import com.powerwin.boot.config.Define;
 import com.powerwin.boot.config.RedisConnection;
 import com.powerwin.cache.AdsCache;
 import com.powerwin.cache.MediaCache;
-import com.powerwin.dao.CallbackTableDemoMapper;
-import com.powerwin.dao.CpcDayMapper;
-import com.powerwin.dao.CpcHourMapper;
 import com.powerwin.entity.*;
 import com.powerwin.parser.ActionParser;
 import com.powerwin.store.DBHistoryStore;
@@ -15,19 +12,17 @@ import com.powerwin.util.*;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import redis.clients.jedis.Jedis;
-
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
+/**
+ * 跳转业务处理器
+ */
 public class JumpProcessor extends CallbackProcessor {
 
 	public static Logger LOG = LogManager.getLogger(JumpProcessor.class);
 
 
-	CpcHourMapper cpcHourMapper = (CpcHourMapper)DaoUtil.getDao(CpcHourMapper.class);
-	CpcDayMapper cpcDayMapper = (CpcDayMapper)DaoUtil.getDao(CpcDayMapper.class);
-	CallbackTableDemoMapper callbackTableMapper = (CallbackTableDemoMapper)DaoUtil.getDao(CallbackTableDemoMapper.class);
 
 	public List<Object>[] process(List<Object> vals) {
 		
@@ -109,7 +104,7 @@ public class JumpProcessor extends CallbackProcessor {
 
 		// 1 应用 3 渠道
 		int data_from = media.getType() == 1 ? 1 : 3;
-        //	int ad_from = ad.getDataFrom();
+        //		int ad_from = ad.getDataFrom();
 		int ad_from = 0;
 
 		int year = ListUtil.getInt(vals, Index.YEAR);
@@ -238,19 +233,10 @@ public class JumpProcessor extends CallbackProcessor {
 				item.action = Define.ACTION_CLICK;
 
 				LOG.trace(String.format("update item to database jump mac=%s udid=%s appid=%d adid=%d invalid=%d saved=%d", mac, udid, appid, adid, invalid,item.saved));
-//				DBHistoryStore.getInstance(FileStore.STORE_STORE, date, type, Define.ACTION_CLICK).put(adid, mac,udid, item);
-//				// todo
-//				CountValues cv = CountValues.create(Define.ACTION_CLICK, 1, 0, 1, saved, 0, 0);
-//				Counter.getInstance().add(ck, cv);
-				CpcHour cpc_hour = getCpcHour(year,mon,day,hour,type,data_from,ad_from,game_id,1,0,unique,saved);
-				cpcHourMapper.insert(cpc_hour);
-
-				CpcDay cpc_day = getCpcDay(year,mon,day,type,data_from,ad_from,game_id,1,0,unique,saved);
-				cpcDayMapper.insert(cpc_day);
-
-				StringBuffer tablename = getCallbackTablename();
-				CallbackTableDemo callback = getCallBackInstance(data_from,ad_from,game_id,saved,action,adid,appid,udid,uid,cid,0,ad.getPlanid());
-				callbackTableMapper.insert(tablename,callback);
+				DBHistoryStore.getInstance(FileStore.STORE_STORE, date, type, Define.ACTION_CLICK).put(adid, mac,udid, item);
+				// todo
+				CountValues cv = CountValues.create(Define.ACTION_CLICK, 1, 0, 1, saved, 0, 0);
+				Counter.getInstance().add(ck, cv);
 			}
 		}
 		
@@ -263,18 +249,9 @@ public class JumpProcessor extends CallbackProcessor {
 		}
 		*/
 		// todo
-//		CountValues cv = CountValues.create(action, vcount, 0, vunique, vsaved, 0, 0);
-//		Counter.getInstance().add(ck, cv);
-		CpcHour cpc_hour = getCpcHour(year,mon,day,hour,type,data_from,ad_from,game_id,1,0,unique,saved);
-		cpcHourMapper.insert(cpc_hour);
+		CountValues cv = CountValues.create(action, vcount, 0, vunique, vsaved, 0, 0);
+		Counter.getInstance().add(ck, cv);
 
-		CpcDay cpc_day = getCpcDay(year,mon,day,type,data_from,ad_from,game_id,1,0,unique,saved);
-		cpcDayMapper.insert(cpc_day);
-
-		StringBuffer tablename = getCallbackTablename();
-		CallbackTableDemo callback = getCallBackInstance(data_from,ad_from,game_id,saved,action,adid,appid,udid,uid,cid,0,ad.getPlanid());
-		callbackTableMapper.insert(tablename,callback);
-		
 		//广告ID：15477 ，特殊回调模式，所以增加点击记录
 		if(adid == 15477 ) {
 			Jedis jMigu = null;
@@ -290,115 +267,5 @@ public class JumpProcessor extends CallbackProcessor {
 			}
 		}
 		return null;
-	}
-
-	/**
-	 * 填充CallbackTableDemo对象
-	 * @param data_from
-	 * @param ad_from
-	 * @param game_id
-	 * @param saved
-	 * @param action
-	 * @param adid
-	 * @param appid
-	 * @param udid
-	 * @param uid
-	 * @param cid
-	 * @param is_bool_monitor
-	 * @param planid
-	 * @return
-	 */
-	public CallbackTableDemo getCallBackInstance(int data_from,int ad_from,int game_id,int saved,int action,int adid,int appid,String udid,int uid,int cid,int is_bool_monitor,int planid){
-		CallbackTableDemo c = new CallbackTableDemo();
-		c.setDataFrom(data_from);
-		c.setAdFrom(ad_from);
-		c.setGameId(game_id);
-		c.setSaved((short) saved);
-		c.setCid(cid);
-		c.setUid(uid);
-		c.setAdid(adid);
-		c.setAction((short) action);
-		c.setIsBoolMonitor((short)is_bool_monitor);
-		c.setAppid(appid);
-		c.setAdplanid(planid);
-		c.setUdid(udid);
-		return c;
-	}
-
-	/**
-	 * 生成回调表名
-	 * @return
-	 */
-	public StringBuffer getCallbackTablename(){
-		StringBuffer base = new StringBuffer("cpc_callback_");
-		Date d = new Date();
-		SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
-		String time = sdf.format(d);
-		base.append(time);
-		return base;
-	}
-
-	/**
-	 * 填充CpcHour对象
-	 * @param year
-	 * @param mon
-	 * @param day
-	 * @param hour
-	 * @param type
-	 * @param data_from
-	 * @param ad_from
-	 * @param game_id
-	 * @param jump_count
-	 * @param jump_invalid
-	 * @param jump_unique
-	 * @param jump_saved
-	 * @return
-	 */
-	public CpcHour getCpcHour(int year,int mon,int day,int hour,int type,int data_from,int ad_from,int game_id,int jump_count,int jump_invalid,int jump_unique,int jump_saved){
-		CpcHour c = new CpcHour();
-		c.setYear((short)year);
-		c.setMon((short)mon);
-		c.setDay((short)day);
-		c.setHour((short)hour);
-		c.setType((short)type);
-		c.setDataFrom((short)data_from);
-		c.setAdFrom((short)ad_from);
-		c.setGameId((short)game_id);
-		c.setJumpCount(jump_count);
-		c.setJumpInvalid(jump_invalid);
-		c.setJumpUnique(jump_unique);
-		c.setJumpSaved(jump_saved);
-		return c;
-	}
-
-	/**
-	 * 填充CpcDay对象
-	 * @param year
-	 * @param mon
-	 * @param day
-	 * @param type
-	 * @param data_from
-	 * @param ad_from
-	 * @param game_id
-	 * @param jump_count
-	 * @param jump_invalid
-	 * @param jump_unique
-	 * @param jump_saved
-	 * @return
-	 */
-	public CpcDay getCpcDay(int year,int mon,int day,int type,int data_from,int ad_from,int game_id,int jump_count,int jump_invalid,int jump_unique,int jump_saved){
-		CpcDay c = new CpcDay();
-		c.setYear((short)year);
-		c.setMon((short)mon);
-		c.setDay((short)day);
-		c.setType((short)type);
-		c.setDataFrom((short)data_from);
-		c.setAdFrom((short)ad_from);
-		c.setGameId((short)game_id);
-		c.setJumpCount(jump_count);
-		c.setJumpInvalid(jump_invalid);
-		c.setJumpUnique(jump_unique);
-		c.setJumpSaved(jump_saved);
-		return c;
 	}
 }

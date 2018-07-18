@@ -4,7 +4,6 @@ package com.powerwin.util;
 import com.powerwin.entity.CountStoreMap;
 import com.powerwin.entity.CountValues;
 import com.powerwin.entity.DetailHourKeys;
-
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 

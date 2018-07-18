@@ -24,6 +24,7 @@ public class MeidaPriceCache {
 		
 		Jedis jedis = null;
 		try {
+			//todo 数据库没有media_price这张表   并且这段代码一定会被执行  在redis有数据，点击、激活线程能够启动的时候
 			jedis = RedisConnection.getInstance("main");
 //			String sql = "SELECT `adid`,`appid`,`effect_time`,`price` FROM `media_price` WHERE isable=1 AND update_time>?";
 //			Object dao = DaoUtil.getDao(x.class);

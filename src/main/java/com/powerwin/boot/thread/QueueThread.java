@@ -9,7 +9,13 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-
+/**
+ * 线程类1
+ *
+ * 在线程类1中执行线程类2
+ * 1写日志
+ * 2使用线程池为线程类2创建多个线程（默认是不使用的）
+ */
 public class QueueThread extends Thread {
 	
 	private boolean loop = true;

@@ -9,7 +9,7 @@ import java.util.List;
 /**
  * BaseParser是定义好的公共的解析策略
  *
- * ShowParser的继承重写自己的特性  使用了内部接口，定义了规范
+ * ShowParser继承BaseParser后重写自己的特性  使用了内部接口，定义了规范
  */
 public class ShowParser extends BaseParser implements Define.SourceIndex {
 

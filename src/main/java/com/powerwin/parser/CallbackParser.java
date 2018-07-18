@@ -11,7 +11,7 @@ import java.util.List;
 /**
  * BaseParser是定义好的公共的解析策略
  *
- * CallbackParser的继承重写自己的特性  使用了内部接口，定义了规范
+ * CallbackParser继承BaseParser后重写自己的特性  使用了内部接口，定义了规范
  */
 public class CallbackParser extends BaseParser {
 

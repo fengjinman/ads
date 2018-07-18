@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 
 
 /**
+ * 切换数据源
  * Created by fengjinman Administrator on 2018/7/11.
  */
 @Component
